@@ -69,7 +69,7 @@ static YYSIZE_T zend_yytnamerr(char*, const char*);
 %left '^'
 %left '&'
 %nonassoc T_IS_EQUAL T_IS_NOT_EQUAL T_IS_IDENTICAL T_IS_NOT_IDENTICAL T_SPACESHIP
-%nonassoc '<' T_IS_SMALLER_OR_EQUAL '>' T_IS_GREATER_OR_EQUAL
+%nonassoc '<' T_IS_SMALLER_OR_EQUAL '>' T_IS_GREATER_OR_EQUAL T_IN
 %left '.'
 %left T_SL T_SR
 %left '+' '-'
@@ -223,6 +223,7 @@ static YYSIZE_T zend_yytnamerr(char*, const char*);
 %token T_POW             "** (T_POW)"
 %token T_POW_EQUAL       "**= (T_POW_EQUAL)"
 %token T_BAD_CHARACTER   "invalid character (T_BAD_CHARACTER)"
+%token T_IN              "in (T_IN)"
 
 /* Token used to force a parse error from the lexer */
 %token T_ERROR
@@ -993,6 +994,7 @@ expr:
 	|	T_YIELD_FROM expr { $$ = zend_ast_create(ZEND_AST_YIELD_FROM, $2); CG(extra_fn_flags) |= ZEND_ACC_GENERATOR; }
 	|	inline_function { $$ = $1; }
 	|	T_STATIC inline_function { $$ = $2; ((zend_ast_decl *) $$)->flags |= ZEND_ACC_STATIC; }
+	|	expr T_IN expr { $$ = zend_ast_create(ZEND_AST_IN, $1, $3); }
 ;
 
 

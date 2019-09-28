@@ -8793,6 +8793,52 @@ ZEND_VM_HANDLER(167, ZEND_COPY_TMP, TMPVAR, UNUSED)
 	ZEND_VM_NEXT_OPCODE();
 }
 
+ZEND_VM_HANDLER(195, ZEND_IN, CONST|TMP|VAR|CV, CONST|TMP|VAR|CV)
+{
+	USE_OPLINE
+	zval *op1, *op2;
+
+	SAVE_OPLINE();
+	op1 = GET_OP1_ZVAL_PTR(BP_VAR_R);
+	op2 = GET_OP2_ZVAL_PTR(BP_VAR_R);
+
+	if (EXPECTED(Z_TYPE_P(op2) == IS_STRING)) {
+		if (Z_STRLEN_P(op1) == 0) {
+			ZVAL_TRUE(EX_VAR(opline->result.var));
+		} else {
+			const char *found = zend_memnstr(
+				Z_STRVAL_P(op2),
+				Z_STRVAL_P(op1),
+				Z_STRLEN_P(op1),
+				Z_STRVAL_P(op2) + Z_STRLEN_P(op2)
+			);
+
+			ZVAL_BOOL(EX_VAR(opline->result.var), EXPECTED(found != NULL));
+		}
+	} else if (EXPECTED(Z_TYPE_P(op2) == IS_ARRAY)) {
+		HashTable *ht = Z_ARRVAL_P(op2);
+
+		if (ht->nNumOfElements == 0) {
+			ZVAL_FALSE(EX_VAR(opline->result.var));
+		} else {
+			ZVAL_FALSE(EX_VAR(opline->result.var));
+			zval *elm, comp_result;
+
+			ZEND_HASH_FOREACH_VAL(ht, elm) {
+				compare_function(&comp_result, op1, elm);
+				if (Z_LVAL(comp_result) == 0) {
+					ZVAL_TRUE(EX_VAR(opline->result.var));
+					break;
+				}
+			} ZEND_HASH_FOREACH_END();
+		}
+	}
+
+	FREE_OP1();
+	FREE_OP2();
+	ZEND_VM_NEXT_OPCODE_CHECK_EXCEPTION();
+}
+
 ZEND_VM_HOT_TYPE_SPEC_HANDLER(ZEND_JMP, (OP_JMP_ADDR(op, op->op1) > op), ZEND_JMP_FORWARD, JMP_ADDR, ANY)
 {
 	USE_OPLINE

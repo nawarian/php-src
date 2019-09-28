@@ -7634,6 +7634,21 @@ void zend_compile_instanceof(znode *result, zend_ast *ast) /* {{{ */
 }
 /* }}} */
 
+void zend_compile_in(znode *result, zend_ast *ast) /* {{{ */
+{
+	zend_ast *needle_ast = ast->child[0];
+	zend_ast *haystack_ast = ast->child[1];
+	znode needle_node, haystack_node;
+
+	ZEND_ASSERT(ast->kind == ZEND_AST_IN);
+
+	zend_compile_expr(&needle_node, needle_ast);
+	zend_compile_expr(&haystack_node, haystack_ast);
+
+	zend_emit_op_tmp(result, ZEND_IN, &needle_node, &haystack_node);
+}
+/* }}} */
+
 void zend_compile_include_or_eval(znode *result, zend_ast *ast) /* {{{ */
 {
 	zend_ast *expr_ast = ast->child[0];
@@ -8500,6 +8515,9 @@ void zend_compile_expr(znode *result, zend_ast *ast) /* {{{ */
 			return;
 		case ZEND_AST_INSTANCEOF:
 			zend_compile_instanceof(result, ast);
+			return;
+		case ZEND_AST_IN:
+			zend_compile_in(result, ast);
 			return;
 		case ZEND_AST_INCLUDE_OR_EVAL:
 			zend_compile_include_or_eval(result, ast);
